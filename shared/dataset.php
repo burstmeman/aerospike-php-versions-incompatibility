@@ -114,6 +114,9 @@ function reprValue($value): string
     if (is_bool($value)) {
         return $value ? 'true' : 'false';
     }
+    if (is_string($value)) {
+        return var_export($value, true);
+    }
     if (is_scalar($value)) {
         return (string) $value;
     }
@@ -139,9 +142,11 @@ function reprArray(array $value): string
 }
 
 /**
- * Every client wraps bytes it cannot natively decode in its own class
- * (`Aerospike\Bytes`, `Aerospike\Blob`, ...). Rather than hard-coding each
- * one, this reads whatever byte-accessor the object happens to expose.
+ * Every client wraps bytes it cannot natively decode in its own class:
+ * the legacy client's `Aerospike\Bytes` (public `$s`), v2-preview's
+ * `Aerospike\Blob` (`bytes()`), v1.4.0's `Aerospike\BLOB` (a `binary`
+ * getter). Rather than hard-coding each one, this reads whatever
+ * byte-accessor the object happens to expose.
  */
 function reprObject(object $value): string
 {
@@ -149,15 +154,21 @@ function reprObject(object $value): string
         $bytes = $value->bytes();
     } elseif (property_exists($value, 's')) {
         $bytes = $value->s;
+    } elseif (property_exists($value, 'binary')) {
+        $bytes = $value->binary;
     } else {
         $bytes = null;
     }
 
     if ($bytes === null) {
-        return get_class($value) . ' ' . json_encode(get_object_vars($value), JSON_UNESCAPED_UNICODE);
+        $props = [];
+        foreach (get_object_vars($value) as $name => $propValue) {
+            $props[] = "$name: " . reprValue($propValue);
+        }
+        return get_class($value) . '(' . implode(', ', $props) . ')';
     }
 
     $printable = preg_match('/^[\x20-\x7E]*$/', $bytes) === 1;
 
-    return get_class($value) . '(' . ($printable ? "\"$bytes\"" : '0x' . bin2hex($bytes)) . ')';
+    return get_class($value) . '(' . ($printable ? var_export($bytes, true) : '0x' . bin2hex($bytes)) . ')';
 }

@@ -18,7 +18,7 @@ services:
     platform: linux/amd64
     build:
       context: .
-      dockerfile: php74-aerospike-7.4/Dockerfile
+      dockerfile: php74-aerospike-legacy/Dockerfile
     depends_on:
       aerospike:
         condition: service_healthy

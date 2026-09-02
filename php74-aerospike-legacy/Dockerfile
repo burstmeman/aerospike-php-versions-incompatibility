@@ -38,4 +38,4 @@ RUN git clone --depth 1 https://github.com/aerospike-community/aerospike-client-
 
 WORKDIR /app
 COPY shared/ shared/
-COPY php74-aerospike-7.4/*.php ./
+COPY php74-aerospike-legacy/*.php ./
