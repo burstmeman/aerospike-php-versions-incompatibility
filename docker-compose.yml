@@ -1,0 +1,53 @@
+services:
+  aerospike:
+    image: aerospike/aerospike-server:latest
+    platform: linux/amd64
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "asinfo -v status | grep -q ok"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  # Legacy client: a C extension for PHP 7.4, talking to the server directly.
+  # The Aerospike C client SDK it links only ships prebuilt x86_64 binaries,
+  # so every service here is pinned to amd64 regardless of the host's
+  # architecture, for consistency.
+  php74:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: php74-aerospike-7.4/Dockerfile
+    depends_on:
+      aerospike:
+        condition: service_healthy
+    environment:
+      AEROSPIKE_HOST: aerospike
+      AEROSPIKE_NAMESPACE: test
+
+  # v1.4.0: a Rust extension talking, over gRPC, to a Go "Connection
+  # Manager" sidecar that owns the real connection to the server.
+  php81-v1-4-0:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: php81-aerospike-v1.4.0/Dockerfile
+    depends_on:
+      aerospike:
+        condition: service_healthy
+    environment:
+      AEROSPIKE_NAMESPACE: test
+
+  # v2-preview: a Rust extension talking, over shared memory, to a Rust
+  # daemon that owns the real connection to the server.
+  php81-v2-preview:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: php81-aerospike-v2-preview/Dockerfile
+    depends_on:
+      aerospike:
+        condition: service_healthy
+    environment:
+      AEROSPIKE_NAMESPACE: test

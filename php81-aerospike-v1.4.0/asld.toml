@@ -1,0 +1,7 @@
+# Config for aerospike-connection-manager (ACM). The section name ("default")
+# is arbitrary - unlike the v2-preview daemon, the PHP client here connects
+# straight to a socket path (`Aerospike\Client::connect($socket)`), not to a
+# named instance, so nothing on the PHP side ever refers to this name.
+[default]
+socket = "/tmp/asld_grpc.sock"
+host = "aerospike:3000"

@@ -1,0 +1,11 @@
+# Minimal config for aerospike-php-daemon. See the upstream annotated
+# example for every other knob:
+# https://github.com/aerospike/php-client/blob/v2-preview/daemon/aerospike-daemon.toml.example
+[daemon]
+# The shared-memory service name. PHP's `new Aerospike\Client($instance)`
+# must name the same instance - "default" is what a bare `new Client()` asks
+# for.
+instance = "default"
+
+[cluster.default]
+host = "aerospike:3000"
