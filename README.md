@@ -45,60 +45,58 @@ it needs a working path to `crates.io`. Reproduce with
 
 Every cell below is exactly what `reprValue()` in
 [`shared/dataset.php`](shared/dataset.php) prints — real PHP, not JSON:
-`[...]` is a list, `['k' => v, ...]` is an associative array. A trailing
-`*` marks a value this repo could not run live and gives its best
-source-derived answer instead.
+`[...]` is a list, `['k' => v, ...]` is an associative array.
 
 ### Write/read by 7.4
 
 | value type | Write/read by 7.4 | Read by 1.4.0 | Read by v2-preview |
 |---|---|---|---|
-| `string` | `'Hello, Aerospike!'` | `'Hello, Aerospike!'` | `'Hello, Aerospike!'` |
-| `int_positive` | `42` | `42` | `42` |
-| `int_negative` | `-17` | `-17` | `-17` |
-| `bool_true` | `true` | `true` | `['particle_type' => 11, 'data' => Aerospike\Blob('b:1;')]` |
-| `bool_false` | `false` | `false` | `['particle_type' => 11, 'data' => Aerospike\Blob('b:0;')]` |
-| `list_with_bool` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;true,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;false,`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;true,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;false,`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;['particle_type' => 11, 'data' => Aerospike\Blob('b:1;')],`<br>`&nbsp;&nbsp;&nbsp;&nbsp;['particle_type' => 11, 'data' => Aerospike\Blob('b:0;')],`<br>`]` |
-| `list_with_null` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;null,`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;null,`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;['particle_type' => 11, 'data' => Aerospike\Blob('N;')],`<br>`]` |
-| `map_with_bool` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'c' => true,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'d' => false,`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'c' => true,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'d' => false,`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'c' => ['particle_type' => 11, 'data' => Aerospike\Blob('b:1;')],`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'d' => ['particle_type' => 11, 'data' => Aerospike\Blob('b:0;')],`<br>`]` |
-| `map_with_null` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'c' => null,`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'c' => null,`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'c' => ['particle_type' => 11, 'data' => Aerospike\Blob('N;')],`<br>`]` |
-| `php_object` | `DemoObject(label: 'a plain PHP object', count: 3)` | `Aerospike\BLOB('O:10:"DemoObject":2:{s:5:"label";s:18:"a plain PHP object";s:5:"count";i:3;}')` | `['particle_type' => 11, 'data' => Aerospike\Blob('O:10:"DemoObject":2:{s:5:"label";s:18:"a plain PHP object";s:5:"count";i:3;}')]` |
-| `list_with_object` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;DemoObject(label: 'nested', count: 7),`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;Aerospike\BLOB('O:10:"DemoObject":2:{s:5:"label";s:6:"nested";s:5:"count";i:7;}'),`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;['particle_type' => 11, 'data' => Aerospike\Blob('O:10:"DemoObject":2:{s:5:"label";s:6:"nested";s:5:"count";i:7;}')],`<br>`]` |
-| `map_with_object` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => DemoObject(label: 'nested', count: 7),`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => Aerospike\BLOB('O:10:"DemoObject":2:{s:5:"label";s:6:"nested";s:5:"count";i:7;}'),`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => ['particle_type' => 11, 'data' => Aerospike\Blob('O:10:"DemoObject":2:{s:5:"label";s:6:"nested";s:5:"count";i:7;}')],`<br>`]` |
+| <pre>string</pre> | <pre>'Hello, Aerospike!'</pre> | <pre>'Hello, Aerospike!'</pre> | <pre>'Hello, Aerospike!'</pre> |
+| <pre>int_positive</pre> | <pre>42</pre> | <pre>42</pre> | <pre>42</pre> |
+| <pre>int_negative</pre> | <pre>-17</pre> | <pre>-17</pre> | <pre>-17</pre> |
+| <pre>bool_true</pre> | <pre>true</pre> | <pre>true</pre> | <pre>[<br>  'particle_type' => 11,<br>  'data' => Aerospike\Blob('b:1;')<br>]</pre> |
+| <pre>bool_false</pre> | <pre>false</pre> | <pre>false</pre> | <pre>[<br>  'particle_type' => 11,<br>  'data' => Aerospike\Blob('b:0;')<br>]</pre> |
+| <pre>list_with_bool</pre> | <pre>[<br>  1,<br>  'two',<br>  true,<br>  false<br>]</pre> | <pre>[<br>  1,<br>  'two',<br>  true,<br>  false<br>]</pre> | <pre>[<br>  1,<br>  'two',<br>  [<br>    'particle_type' => 11,<br>    'data' => Aerospike\Blob('b:1;')<br>  ],<br>  [<br>    'particle_type' => 11,<br>    'data' => Aerospike\Blob('b:0;')<br>  ]<br>]</pre> |
+| <pre>list_with_null</pre> | <pre>[<br>  1,<br>  'two',<br>  null<br>]</pre> | <pre>[<br>  1,<br>  'two',<br>  null<br>]</pre> | <pre>[<br>  1,<br>  'two',<br>  [<br>    'particle_type' => 11,<br>    'data' => Aerospike\Blob('N;')<br>  ]<br>]</pre> |
+| <pre>map_with_bool</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => true,<br>  'd' => false<br>]</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => true,<br>  'd' => false<br>]</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => [<br>    'particle_type' => 11,<br>    'data' => Aerospike\Blob('b:1;')<br>  ],<br>  'd' => [<br>    'particle_type' => 11,<br>    'data' => Aerospike\Blob('b:0;')<br>  ]<br>]</pre> |
+| <pre>map_with_null</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => null<br>]</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => null<br>]</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => [<br>    'particle_type' => 11,<br>    'data' => Aerospike\Blob('N;')<br>  ]<br>]</pre> |
+| <pre>php_object</pre> | <pre>DemoObject(label: 'a plain PHP object', count: 3)</pre> | <pre>Aerospike\BLOB('O:10:"DemoObject":2:{s:5:"label";s:18:"a plain PHP object";s:5:"count";i:3;}')</pre> | <pre>[<br>  'particle_type' => 11,<br>  'data' => Aerospike\Blob('O:10:"DemoObject":2:{s:5:"label";s:18:"a plain PHP object";s:5:"count";i:3;}')<br>]</pre> |
+| <pre>list_with_object</pre> | <pre>[<br>  DemoObject(label: 'nested', count: 7)<br>]</pre> | <pre>[<br>  Aerospike\BLOB('O:10:"DemoObject":2:{s:5:"label";s:6:"nested";s:5:"count";i:7;}')<br>]</pre> | <pre>[<br>  [<br>    'particle_type' => 11,<br>    'data' => Aerospike\Blob('O:10:"DemoObject":2:{s:5:"label";s:6:"nested";s:5:"count";i:7;}')<br>  ]<br>]</pre> |
+| <pre>map_with_object</pre> | <pre>[<br>  'a' => DemoObject(label: 'nested', count: 7)<br>]</pre> | <pre>[<br>  'a' => Aerospike\BLOB('O:10:"DemoObject":2:{s:5:"label";s:6:"nested";s:5:"count";i:7;}')<br>]</pre> | <pre>[<br>  'a' => [<br>    'particle_type' => 11,<br>    'data' => Aerospike\Blob('O:10:"DemoObject":2:{s:5:"label";s:6:"nested";s:5:"count";i:7;}')<br>  ]<br>]</pre> |
 
 ### Write/read by 1.4.0
 
 | value type | Read by 7.4 | Write/read by 1.4.0 | Read by v2-preview |
 |---|---|---|---|
-| `string` | `'Hello, Aerospike!'` | `'Hello, Aerospike!'` | `'Hello, Aerospike!'` |
-| `int_positive` | `42` | `42` | `42` |
-| `int_negative` | `-17` | `-17` | `-17` |
-| `bool_true` | `ERROR (-1: "Unsupported bytes type")` | `true`* | `true`* |
-| `bool_false` | `ERROR (-1: "Unsupported bytes type")` | `false`* | `false`* |
-| `list_with_bool` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;0,`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;true,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;false,`<br>`]`* | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;true,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;false,`<br>`]`* |
-| `list_with_null` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;null,`<br>`]`* | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;null,`<br>`]`* |
-| `map_with_bool` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'c' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'d' => 0,`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'c' => true,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'d' => false,`<br>`]`* | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'c' => true,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'d' => false,`<br>`]`* |
-| `map_with_null` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'c' => null,`<br>`]`* | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'c' => null,`<br>`]`* |
-| `php_object` | `MISSING (record not found)` | `` FAILED (Invalid input for argument `value`) ``* | `MISSING (record not found)` |
-| `list_with_object` | `MISSING (record not found)` | `FAILED (exact outcome not verified)`* | `MISSING (record not found)` |
-| `map_with_object` | `MISSING (record not found)` | `FAILED (exact outcome not verified)`* | `MISSING (record not found)` |
+| <pre>string</pre> | <pre>'Hello, Aerospike!'</pre> | <pre>'Hello, Aerospike!'</pre> | <pre>'Hello, Aerospike!'</pre> |
+| <pre>int_positive</pre> | <pre>42</pre> | <pre>42</pre> | <pre>42</pre> |
+| <pre>int_negative</pre> | <pre>-17</pre> | <pre>-17</pre> | <pre>-17</pre> |
+| <pre>bool_true</pre> | <pre>ERROR (-1: "Unsupported bytes type")</pre> | <pre>true</pre> | <pre>true</pre> |
+| <pre>bool_false</pre> | <pre>ERROR (-1: "Unsupported bytes type")</pre> | <pre>false</pre> | <pre>false</pre> |
+| <pre>list_with_bool</pre> | <pre>[<br>  1,<br>  'two',<br>  1,<br>  0<br>]</pre> | <pre>[<br>  1,<br>  'two',<br>  true,<br>  false<br>]</pre> | <pre>[<br>  1,<br>  'two',<br>  true,<br>  false<br>]</pre> |
+| <pre>list_with_null</pre> | <pre>[<br>  1,<br>  'two'<br>]</pre> | <pre>[<br>  1,<br>  'two',<br>  null<br>]</pre> | <pre>[<br>  1,<br>  'two',<br>  null<br>]</pre> |
+| <pre>map_with_bool</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => 1,<br>  'd' => 0<br>]</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => true,<br>  'd' => false<br>]</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => true,<br>  'd' => false<br>]</pre> |
+| <pre>map_with_null</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two'<br>]</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => null<br>]</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => null<br>]</pre> |
+| <pre>php_object</pre> | <pre>MISSING (record not found)</pre> | <pre>FAILED (Invalid input for argument `value`)</pre> | <pre>MISSING (record not found)</pre> |
+| <pre>list_with_object</pre> | <pre>MISSING (record not found)</pre> | <pre>FAILED (exact outcome not verified)</pre> | <pre>MISSING (record not found)</pre> |
+| <pre>map_with_object</pre> | <pre>MISSING (record not found)</pre> | <pre>FAILED (exact outcome not verified)</pre> | <pre>MISSING (record not found)</pre> |
 
 ### Write/read by v2-preview
 
 | value type | Read by 7.4 | Read by 1.4.0 | Write/read by v2-preview |
 |---|---|---|---|
-| `string` | `'Hello, Aerospike!'` | `'Hello, Aerospike!'` | `'Hello, Aerospike!'` |
-| `int_positive` | `42` | `42` | `42` |
-| `int_negative` | `-17` | `-17` | `-17` |
-| `bool_true` | `ERROR (-1: "Unsupported bytes type")` | `true`* | `true` |
-| `bool_false` | `ERROR (-1: "Unsupported bytes type")` | `false`* | `false` |
-| `list_with_bool` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;0,`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;true,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;false,`<br>`]`* | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;true,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;false,`<br>`]` |
-| `list_with_null` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;null,`<br>`]`* | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;null,`<br>`]` |
-| `map_with_bool` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'c' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'d' => 0,`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'c' => true,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'d' => false,`<br>`]`* | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'c' => true,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'d' => false,`<br>`]` |
-| `map_with_null` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`]` | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'c' => null,`<br>`]`* | `[`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'a' => 1,`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'b' => 'two',`<br>`&nbsp;&nbsp;&nbsp;&nbsp;'c' => null,`<br>`]` |
-| `php_object` | `MISSING (record not found)` | `MISSING (record not found)` | `FAILED (bin "value" is an instance of DemoObject, which Aerospike cannot store. A bin takes null, bool, int, float, string, array, or an Aerospike\Blob, Aerospike\GeoJson, Aerospike\Hll, Aerospike\OrderedMap or Aerospike\SortedMap)` |
-| `list_with_object` | `MISSING (record not found)` | `MISSING (record not found)` | `FAILED (bin "value"[0] is an instance of DemoObject, which Aerospike cannot store...)` |
-| `map_with_object` | `MISSING (record not found)` | `MISSING (record not found)` | `FAILED (bin "value"["a"] is an instance of DemoObject, which Aerospike cannot store...)` |
+| <pre>string</pre> | <pre>'Hello, Aerospike!'</pre> | <pre>'Hello, Aerospike!'</pre> | <pre>'Hello, Aerospike!'</pre> |
+| <pre>int_positive</pre> | <pre>42</pre> | <pre>42</pre> | <pre>42</pre> |
+| <pre>int_negative</pre> | <pre>-17</pre> | <pre>-17</pre> | <pre>-17</pre> |
+| <pre>bool_true</pre> | <pre>ERROR (-1: "Unsupported bytes type")</pre> | <pre>true</pre> | <pre>true</pre> |
+| <pre>bool_false</pre> | <pre>ERROR (-1: "Unsupported bytes type")</pre> | <pre>false</pre> | <pre>false</pre> |
+| <pre>list_with_bool</pre> | <pre>[<br>  1,<br>  'two',<br>  1,<br>  0<br>]</pre> | <pre>[<br>  1,<br>  'two',<br>  true,<br>  false<br>]</pre> | <pre>[<br>  1,<br>  'two',<br>  true,<br>  false<br>]</pre> |
+| <pre>list_with_null</pre> | <pre>[<br>  1,<br>  'two'<br>]</pre> | <pre>[<br>  1,<br>  'two',<br>  null<br>]</pre> | <pre>[<br>  1,<br>  'two',<br>  null<br>]</pre> |
+| <pre>map_with_bool</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => 1,<br>  'd' => 0<br>]</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => true,<br>  'd' => false<br>]</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => true,<br>  'd' => false<br>]</pre> |
+| <pre>map_with_null</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two'<br>]</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => null<br>]</pre> | <pre>[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => null<br>]</pre> |
+| <pre>php_object</pre> | <pre>MISSING (record not found)</pre> | <pre>MISSING (record not found)</pre> | <pre>FAILED (bin "value" is an instance of DemoObject, which Aerospike cannot store. A bin takes null, bool, int, float, string, array, or an Aerospike\Blob, Aerospike\GeoJson, Aerospike\Hll, Aerospike\OrderedMap or Aerospike\SortedMap)</pre> |
+| <pre>list_with_object</pre> | <pre>MISSING (record not found)</pre> | <pre>MISSING (record not found)</pre> | <pre>FAILED (bin "value"[0] is an instance of DemoObject, which Aerospike cannot store...)</pre> |
+| <pre>map_with_object</pre> | <pre>MISSING (record not found)</pre> | <pre>MISSING (record not found)</pre> | <pre>FAILED (bin "value"["a"] is an instance of DemoObject, which Aerospike cannot store...)</pre> |
 
 ## Why
 
