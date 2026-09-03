@@ -45,292 +45,60 @@ it needs a working path to `crates.io`. Reproduce with
 
 ## Compatibility Details
 
-Each block below is real PHP: one array per value type, one element per
-client, ordered as commented. `ERROR(...)`, `MISSING()`, `FAILED(...)` are
-not real calls — they stand in for a failed read, a record that was never
-written, and a failed write, respectively.
+Every cell below is exactly what `reprValue()` in
+[`shared/dataset.php`](shared/dataset.php) prints — real PHP, not JSON:
+`[...]` is a list, `['k' => v, ...]` is an associative array.
 
-<details>
-<summary><strong>Write/read by 7.4</strong></summary>
+### Write/read by 7.4
 
-```php
-// value written by 7.4, read back by all three
+| value type | Write/read by 7.4 | Read by 1.4.0 | Read by v2-preview |
+|---|---|---|---|
+| <pre style="max-width:380px;overflow-x:auto;">string</pre> | <pre style="max-width:380px;overflow-x:auto;">'Hello, Aerospike!'</pre> | <pre style="max-width:380px;overflow-x:auto;">'Hello, Aerospike!'</pre> | <pre style="max-width:380px;overflow-x:auto;">'Hello, Aerospike!'</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">int_positive</pre> | <pre style="max-width:380px;overflow-x:auto;">42</pre> | <pre style="max-width:380px;overflow-x:auto;">42</pre> | <pre style="max-width:380px;overflow-x:auto;">42</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">int_negative</pre> | <pre style="max-width:380px;overflow-x:auto;">-17</pre> | <pre style="max-width:380px;overflow-x:auto;">-17</pre> | <pre style="max-width:380px;overflow-x:auto;">-17</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">bool_true</pre> | <pre style="max-width:380px;overflow-x:auto;">true</pre> | <pre style="max-width:380px;overflow-x:auto;">true</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'particle_type' => 11,<br>  'data' => Aerospike\Blob('b:1;')<br>]</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">bool_false</pre> | <pre style="max-width:380px;overflow-x:auto;">false</pre> | <pre style="max-width:380px;overflow-x:auto;">false</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'particle_type' => 11,<br>  'data' => Aerospike\Blob('b:0;')<br>]</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">list_with_bool</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two',<br>  true,<br>  false<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two',<br>  true,<br>  false<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two',<br>  [<br>    'particle_type' => 11,<br>    'data' => Aerospike\Blob('b:1;')<br>  ],<br>  [<br>    'particle_type' => 11,<br>    'data' => Aerospike\Blob('b:0;')<br>  ]<br>]</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">list_with_null</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two',<br>  null<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two',<br>  null<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two',<br>  [<br>    'particle_type' => 11,<br>    'data' => Aerospike\Blob('N;')<br>  ]<br>]</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">map_with_bool</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => true,<br>  'd' => false<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => true,<br>  'd' => false<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => [<br>    'particle_type' => 11,<br>    'data' => Aerospike\Blob('b:1;')<br>  ],<br>  'd' => [<br>    'particle_type' => 11,<br>    'data' => Aerospike\Blob('b:0;')<br>  ]<br>]</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">map_with_null</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => null<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => null<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => [<br>    'particle_type' => 11,<br>    'data' => Aerospike\Blob('N;')<br>  ]<br>]</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">php_object</pre> | <pre style="max-width:380px;overflow-x:auto;">DemoObject(label: 'a plain PHP object', count: 3)</pre> | <pre style="max-width:380px;overflow-x:auto;">Aerospike\BLOB('O:10:"DemoObject":2:{s:5:"label";s:18:"a plain PHP object";s:5:"count";i:3;}')</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'particle_type' => 11,<br>  'data' => Aerospike\Blob('O:10:"DemoObject":2:{s:5:"label";s:18:"a plain PHP object";s:5:"count";i:3;}')<br>]</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">list_with_object</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  DemoObject(label: 'nested', count: 7)<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  Aerospike\BLOB('O:10:"DemoObject":2:{s:5:"label";s:6:"nested";s:5:"count";i:7;}')<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  [<br>    'particle_type' => 11,<br>    'data' => Aerospike\Blob('O:10:"DemoObject":2:{s:5:"label";s:6:"nested";s:5:"count";i:7;}')<br>  ]<br>]</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">map_with_object</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => DemoObject(label: 'nested', count: 7)<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => Aerospike\BLOB('O:10:"DemoObject":2:{s:5:"label";s:6:"nested";s:5:"count";i:7;}')<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => [<br>    'particle_type' => 11,<br>    'data' => Aerospike\Blob('O:10:"DemoObject":2:{s:5:"label";s:6:"nested";s:5:"count";i:7;}')<br>  ]<br>]</pre> |
 
-$string = [
-    'Hello, Aerospike!',                     // write/read by 7.4
-    'Hello, Aerospike!',                     // read by 1.4.0
-    'Hello, Aerospike!',                     // read by v2-preview
-];
+### Write/read by 1.4.0
 
-$int_positive = [
-    42,                                      // write/read by 7.4
-    42,                                      // read by 1.4.0
-    42,                                      // read by v2-preview
-];
+| value type | Read by 7.4 | Write/read by 1.4.0 | Read by v2-preview |
+|---|---|---|---|
+| <pre style="max-width:380px;overflow-x:auto;">string</pre> | <pre style="max-width:380px;overflow-x:auto;">'Hello, Aerospike!'</pre> | <pre style="max-width:380px;overflow-x:auto;">'Hello, Aerospike!'</pre> | <pre style="max-width:380px;overflow-x:auto;">'Hello, Aerospike!'</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">int_positive</pre> | <pre style="max-width:380px;overflow-x:auto;">42</pre> | <pre style="max-width:380px;overflow-x:auto;">42</pre> | <pre style="max-width:380px;overflow-x:auto;">42</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">int_negative</pre> | <pre style="max-width:380px;overflow-x:auto;">-17</pre> | <pre style="max-width:380px;overflow-x:auto;">-17</pre> | <pre style="max-width:380px;overflow-x:auto;">-17</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">bool_true</pre> | <pre style="max-width:380px;overflow-x:auto;">ERROR (-1: "Unsupported bytes type")</pre> | <pre style="max-width:380px;overflow-x:auto;">true</pre> | <pre style="max-width:380px;overflow-x:auto;">true</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">bool_false</pre> | <pre style="max-width:380px;overflow-x:auto;">ERROR (-1: "Unsupported bytes type")</pre> | <pre style="max-width:380px;overflow-x:auto;">false</pre> | <pre style="max-width:380px;overflow-x:auto;">false</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">list_with_bool</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two',<br>  1,<br>  0<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two',<br>  true,<br>  false<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two',<br>  true,<br>  false<br>]</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">list_with_null</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two'<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two',<br>  null<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two',<br>  null<br>]</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">map_with_bool</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => 1,<br>  'd' => 0<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => true,<br>  'd' => false<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => true,<br>  'd' => false<br>]</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">map_with_null</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two'<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => null<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => null<br>]</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">php_object</pre> | <pre style="max-width:380px;overflow-x:auto;">MISSING (record not found)</pre> | <pre style="max-width:380px;overflow-x:auto;">FAILED (Invalid input for argument `value`)</pre> | <pre style="max-width:380px;overflow-x:auto;">MISSING (record not found)</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">list_with_object</pre> | <pre style="max-width:380px;overflow-x:auto;">MISSING (record not found)</pre> | <pre style="max-width:380px;overflow-x:auto;">FAILED (exact outcome not verified)</pre> | <pre style="max-width:380px;overflow-x:auto;">MISSING (record not found)</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">map_with_object</pre> | <pre style="max-width:380px;overflow-x:auto;">MISSING (record not found)</pre> | <pre style="max-width:380px;overflow-x:auto;">FAILED (exact outcome not verified)</pre> | <pre style="max-width:380px;overflow-x:auto;">MISSING (record not found)</pre> |
 
-$int_negative = [
-    -17,                                     // write/read by 7.4
-    -17,                                     // read by 1.4.0
-    -17,                                     // read by v2-preview
-];
+### Write/read by v2-preview
 
-$bool_true = [
-    true,                                    // write/read by 7.4
-    true,                                    // read by 1.4.0
-    ['particle_type' => 11, 'data' => Aerospike\Blob('b:1;')], // read by v2-preview
-];
-
-$bool_false = [
-    false,                                   // write/read by 7.4
-    false,                                   // read by 1.4.0
-    ['particle_type' => 11, 'data' => Aerospike\Blob('b:0;')], // read by v2-preview
-];
-
-$list_with_bool = [
-    [1, 'two', true, false],                 // write/read by 7.4
-    [1, 'two', true, false],                 // read by 1.4.0
-    [
-        1,
-        'two',
-        ['particle_type' => 11, 'data' => Aerospike\Blob('b:1;')],
-        ['particle_type' => 11, 'data' => Aerospike\Blob('b:0;')],
-    ], // read by v2-preview
-];
-
-$list_with_null = [
-    [1, 'two', null],                        // write/read by 7.4
-    [1, 'two', null],                        // read by 1.4.0
-    [
-        1,
-        'two',
-        ['particle_type' => 11, 'data' => Aerospike\Blob('N;')],
-    ], // read by v2-preview
-];
-
-$map_with_bool = [
-    ['a' => 1, 'b' => 'two', 'c' => true, 'd' => false], // write/read by 7.4
-    ['a' => 1, 'b' => 'two', 'c' => true, 'd' => false], // read by 1.4.0
-    [
-        'a' => 1,
-        'b' => 'two',
-        'c' => ['particle_type' => 11, 'data' => Aerospike\Blob('b:1;')],
-        'd' => ['particle_type' => 11, 'data' => Aerospike\Blob('b:0;')],
-    ], // read by v2-preview
-];
-
-$map_with_null = [
-    ['a' => 1, 'b' => 'two', 'c' => null],   // write/read by 7.4
-    ['a' => 1, 'b' => 'two', 'c' => null],   // read by 1.4.0
-    [
-        'a' => 1,
-        'b' => 'two',
-        'c' => ['particle_type' => 11, 'data' => Aerospike\Blob('N;')],
-    ], // read by v2-preview
-];
-
-$php_object = [
-    DemoObject(label: 'a plain PHP object', count: 3), // write/read by 7.4
-    Aerospike\BLOB('O:10:"DemoObject":2:{s:5:"label";s:18:"a plain PHP object";s:5:"count";i:3;}'), // read by 1.4.0
-    [
-        'particle_type' => 11,
-        'data' => Aerospike\Blob('O:10:"DemoObject":2:{s:5:"label";s:18:"a plain PHP object";s:5:"count";i:3;}'),
-    ], // read by v2-preview
-];
-
-$list_with_object = [
-    [DemoObject(label: 'nested', count: 7)], // write/read by 7.4
-    [
-        Aerospike\BLOB('O:10:"DemoObject":2:{s:5:"label";s:6:"nested";s:5:"count";i:7;}'),
-    ], // read by 1.4.0
-    [
-        [
-            'particle_type' => 11,
-            'data' => Aerospike\Blob('O:10:"DemoObject":2:{s:5:"label";s:6:"nested";s:5:"count";i:7;}'),
-        ],
-    ], // read by v2-preview
-];
-
-$map_with_object = [
-    ['a' => DemoObject(label: 'nested', count: 7)], // write/read by 7.4
-    [
-        'a' => Aerospike\BLOB('O:10:"DemoObject":2:{s:5:"label";s:6:"nested";s:5:"count";i:7;}'),
-    ], // read by 1.4.0
-    [
-        'a' => [
-            'particle_type' => 11,
-            'data' => Aerospike\Blob('O:10:"DemoObject":2:{s:5:"label";s:6:"nested";s:5:"count";i:7;}'),
-        ],
-    ], // read by v2-preview
-];
-```
-
-</details>
-
-<details>
-<summary><strong>Write/read by 1.4.0</strong></summary>
-
-```php
-// value written by 1.4.0, read back by all three
-
-$string = [
-    'Hello, Aerospike!',                     // read by 7.4
-    'Hello, Aerospike!',                     // write/read by 1.4.0
-    'Hello, Aerospike!',                     // read by v2-preview
-];
-
-$int_positive = [
-    42,                                      // read by 7.4
-    42,                                      // write/read by 1.4.0
-    42,                                      // read by v2-preview
-];
-
-$int_negative = [
-    -17,                                     // read by 7.4
-    -17,                                     // write/read by 1.4.0
-    -17,                                     // read by v2-preview
-];
-
-$bool_true = [
-    ERROR('Unsupported bytes type'),         // whole record read fails, not just this bin
-    true,                                    // write/read by 1.4.0
-    true,                                    // read by v2-preview
-];
-
-$bool_false = [
-    ERROR('Unsupported bytes type'),         // whole record read fails, not just this bin
-    false,                                   // write/read by 1.4.0
-    false,                                   // read by v2-preview
-];
-
-$list_with_bool = [
-    [1, 'two', 1, 0],                        // bool became int
-    [1, 'two', true, false],                 // write/read by 1.4.0
-    [1, 'two', true, false],                 // read by v2-preview
-];
-
-$list_with_null = [
-    [1, 'two'],                              // null silently dropped
-    [1, 'two', null],                        // write/read by 1.4.0
-    [1, 'two', null],                        // read by v2-preview
-];
-
-$map_with_bool = [
-    ['a' => 1, 'b' => 'two', 'c' => 1, 'd' => 0], // bool became int
-    ['a' => 1, 'b' => 'two', 'c' => true, 'd' => false], // write/read by 1.4.0
-    ['a' => 1, 'b' => 'two', 'c' => true, 'd' => false], // read by v2-preview
-];
-
-$map_with_null = [
-    ['a' => 1, 'b' => 'two'],                // null silently dropped
-    ['a' => 1, 'b' => 'two', 'c' => null],   // write/read by 1.4.0
-    ['a' => 1, 'b' => 'two', 'c' => null],   // read by v2-preview
-];
-
-$php_object = [
-    MISSING(),                               // record not found
-    FAILED('Invalid input for argument `value`'), // write/read by 1.4.0
-    MISSING(),                               // record not found
-];
-
-$list_with_object = [
-    MISSING(),                               // record not found
-    FAILED('exact outcome not verified'),    // write never confirmed live — see Why
-    MISSING(),                               // record not found
-];
-
-$map_with_object = [
-    MISSING(),                               // record not found
-    FAILED('exact outcome not verified'),    // write never confirmed live — see Why
-    MISSING(),                               // record not found
-];
-```
-
-</details>
-
-<details>
-<summary><strong>Write/read by v2-preview</strong></summary>
-
-```php
-// value written by v2-preview, read back by all three
-
-$string = [
-    'Hello, Aerospike!',                     // read by 7.4
-    'Hello, Aerospike!',                     // read by 1.4.0
-    'Hello, Aerospike!',                     // write/read by v2-preview
-];
-
-$int_positive = [
-    42,                                      // read by 7.4
-    42,                                      // read by 1.4.0
-    42,                                      // write/read by v2-preview
-];
-
-$int_negative = [
-    -17,                                     // read by 7.4
-    -17,                                     // read by 1.4.0
-    -17,                                     // write/read by v2-preview
-];
-
-$bool_true = [
-    ERROR('Unsupported bytes type'),         // whole record read fails, not just this bin
-    true,                                    // read by 1.4.0
-    true,                                    // write/read by v2-preview
-];
-
-$bool_false = [
-    ERROR('Unsupported bytes type'),         // whole record read fails, not just this bin
-    false,                                   // read by 1.4.0
-    false,                                   // write/read by v2-preview
-];
-
-$list_with_bool = [
-    [1, 'two', 1, 0],                        // bool became int
-    [1, 'two', true, false],                 // read by 1.4.0
-    [1, 'two', true, false],                 // write/read by v2-preview
-];
-
-$list_with_null = [
-    [1, 'two'],                              // null silently dropped
-    [1, 'two', null],                        // read by 1.4.0
-    [1, 'two', null],                        // write/read by v2-preview
-];
-
-$map_with_bool = [
-    ['a' => 1, 'b' => 'two', 'c' => 1, 'd' => 0], // bool became int
-    ['a' => 1, 'b' => 'two', 'c' => true, 'd' => false], // read by 1.4.0
-    ['a' => 1, 'b' => 'two', 'c' => true, 'd' => false], // write/read by v2-preview
-];
-
-$map_with_null = [
-    ['a' => 1, 'b' => 'two'],                // null silently dropped
-    ['a' => 1, 'b' => 'two', 'c' => null],   // read by 1.4.0
-    ['a' => 1, 'b' => 'two', 'c' => null],   // write/read by v2-preview
-];
-
-$php_object = [
-    MISSING(),                               // record not found
-    MISSING(),                               // record not found
-    FAILED(
-        'bin "value" is an instance of DemoObject, which Aerospike cannot store. '
-        . 'A bin takes null, bool, int, float, string, array, or an Aerospike\Blob, '
-        . 'Aerospike\GeoJson, Aerospike\Hll, Aerospike\OrderedMap or Aerospike\SortedMap'
-    ), // write/read by v2-preview
-];
-
-$list_with_object = [
-    MISSING(),                               // record not found
-    MISSING(),                               // record not found
-    FAILED('bin "value"[0] is an instance of DemoObject, which Aerospike cannot store...'), // write/read by v2-preview
-];
-
-$map_with_object = [
-    MISSING(),                               // record not found
-    MISSING(),                               // record not found
-    FAILED('bin "value"["a"] is an instance of DemoObject, which Aerospike cannot store...'), // write/read by v2-preview
-];
-```
-
-</details>
+| value type | Read by 7.4 | Read by 1.4.0 | Write/read by v2-preview |
+|---|---|---|---|
+| <pre style="max-width:380px;overflow-x:auto;">string</pre> | <pre style="max-width:380px;overflow-x:auto;">'Hello, Aerospike!'</pre> | <pre style="max-width:380px;overflow-x:auto;">'Hello, Aerospike!'</pre> | <pre style="max-width:380px;overflow-x:auto;">'Hello, Aerospike!'</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">int_positive</pre> | <pre style="max-width:380px;overflow-x:auto;">42</pre> | <pre style="max-width:380px;overflow-x:auto;">42</pre> | <pre style="max-width:380px;overflow-x:auto;">42</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">int_negative</pre> | <pre style="max-width:380px;overflow-x:auto;">-17</pre> | <pre style="max-width:380px;overflow-x:auto;">-17</pre> | <pre style="max-width:380px;overflow-x:auto;">-17</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">bool_true</pre> | <pre style="max-width:380px;overflow-x:auto;">ERROR (-1: "Unsupported bytes type")</pre> | <pre style="max-width:380px;overflow-x:auto;">true</pre> | <pre style="max-width:380px;overflow-x:auto;">true</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">bool_false</pre> | <pre style="max-width:380px;overflow-x:auto;">ERROR (-1: "Unsupported bytes type")</pre> | <pre style="max-width:380px;overflow-x:auto;">false</pre> | <pre style="max-width:380px;overflow-x:auto;">false</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">list_with_bool</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two',<br>  1,<br>  0<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two',<br>  true,<br>  false<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two',<br>  true,<br>  false<br>]</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">list_with_null</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two'<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two',<br>  null<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  1,<br>  'two',<br>  null<br>]</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">map_with_bool</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => 1,<br>  'd' => 0<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => true,<br>  'd' => false<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => true,<br>  'd' => false<br>]</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">map_with_null</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two'<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => null<br>]</pre> | <pre style="max-width:380px;overflow-x:auto;">[<br>  'a' => 1,<br>  'b' => 'two',<br>  'c' => null<br>]</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">php_object</pre> | <pre style="max-width:380px;overflow-x:auto;">MISSING (record not found)</pre> | <pre style="max-width:380px;overflow-x:auto;">MISSING (record not found)</pre> | <pre style="max-width:380px;overflow-x:auto;">FAILED (bin "value" is an instance of DemoObject, which Aerospike cannot store. A bin takes null, bool, int, float, string, array, or an Aerospike\Blob, Aerospike\GeoJson, Aerospike\Hll, Aerospike\OrderedMap or Aerospike\SortedMap)</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">list_with_object</pre> | <pre style="max-width:380px;overflow-x:auto;">MISSING (record not found)</pre> | <pre style="max-width:380px;overflow-x:auto;">MISSING (record not found)</pre> | <pre style="max-width:380px;overflow-x:auto;">FAILED (bin "value"[0] is an instance of DemoObject, which Aerospike cannot store...)</pre> |
+| <pre style="max-width:380px;overflow-x:auto;">map_with_object</pre> | <pre style="max-width:380px;overflow-x:auto;">MISSING (record not found)</pre> | <pre style="max-width:380px;overflow-x:auto;">MISSING (record not found)</pre> | <pre style="max-width:380px;overflow-x:auto;">FAILED (bin "value"["a"] is an instance of DemoObject, which Aerospike cannot store...)</pre> |
 
 ## Why
 
