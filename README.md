@@ -39,9 +39,15 @@ what it wrote itself.
 
 Verified live: legacy same-stack, and everything the legacy reader sees
 (written with the official `aerospike-client-go` v7.9.0, same library
-v1.4.0 embeds). Not run live: v1.4.0's own decode/write paths — building
-it needs a working path to `crates.io`. Reproduce with
-[`./run-matrix.sh`](#reproducing-it).
+v1.4.0 embeds). Not run live: v1.4.0's own decode/write paths. Building
+it needs `github.com` and `crates.io` reachable *from inside the build
+container* — `cargo` has no flag to skip TLS verification, so on a
+network that intercepts TLS this only works if the container trusts that
+network's proxy CA, which this environment's own safety policy blocks
+installing. The `list_with_object`/`map_with_object` panic claim below is
+source-confirmed instead (see [Why](#why)). Reproduce with
+[`./run-matrix.sh`](#reproducing-it) on a network/machine without that
+constraint.
 
 ## Compatibility Details
 
@@ -80,8 +86,8 @@ Every cell below is exactly what `reprValue()` in
 | `map_with_bool` | `[`<br>`'a' => 1,`<br>`'b' => 'two',`<br>`'c' => 1,`<br>`'d' => 0`<br>`]` | `[`<br>`'a' => 1,`<br>`'b' => 'two',`<br>`'c' => true,`<br>`'d' => false`<br>`]` | `[`<br>`'a' => 1,`<br>`'b' => 'two',`<br>`'c' => true,`<br>`'d' => false`<br>`]` |
 | `map_with_null` | `[`<br>`'a' => 1,`<br>`'b' => 'two'`<br>`]` | `[`<br>`'a' => 1,`<br>`'b' => 'two',`<br>`'c' => null`<br>`]` | `[`<br>`'a' => 1,`<br>`'b' => 'two',`<br>`'c' => null`<br>`]` |
 | `php_object` | `MISSING (record not found)` | `` FAILED (Invalid input for argument `value`) `` | `MISSING (record not found)` |
-| `list_with_object` | `MISSING (record not found)` | `FAILED (exact outcome not verified)` | `MISSING (record not found)` |
-| `map_with_object` | `MISSING (record not found)` | `FAILED (exact outcome not verified)` | `MISSING (record not found)` |
+| `list_with_object` | `MISSING (record not found)` | `` FAILED (`from_zval` panics: `.unwrap()` on `None` after it already threw "Invalid Object" — an uncaught panic across the FFI boundary should abort the whole process, not raise a catchable exception; not run live) `` | `MISSING (record not found)` |
+| `map_with_object` | `MISSING (record not found)` | `` FAILED (same as `list_with_object`, via `.expect("Invalid value in hashmap")` instead of `.unwrap()`; not run live) `` | `MISSING (record not found)` |
 
 ### Write/read by v2-preview
 
@@ -107,7 +113,8 @@ Every cell below is exactly what `reprValue()` in
 - v1.4.0's Go client ([`aerospike-client-go`](https://github.com/aerospike/aerospike-client-go)) hardcodes a decoder for exactly `b:1;`/`b:0;`/`N;` → native bool/null, at any CDT depth. Anything else tagged particle type 11 (e.g. a serialized object) stays raw bytes.
 - v2-preview has no decoder for particle type 11 at all — surfaces `{particle_type, data}` instead of guessing.
 - New clients write `bool` as native particle type `BOOL = 17`, added after the legacy client was written. Legacy's top-level bin decode fails outright on a type it doesn't recognize (`ERROR -1`); its CDT-element decode is more permissive — it reinterprets an unrecognized `bool` as an integer and drops an unrecognized `null` instead of erroring.
-- Object writes fail on both new clients, but differently: v2-preview's array→wire conversion is `Result`-based and fails cleanly, naming the exact path (`ext/src/value.rs`). v1.4.0's equivalent calls `.unwrap()` on an `Option` (`src/lib.rs`) — a Rust panic on an object element, not a caught error; not verified at runtime here.
+- Object writes fail on both new clients, but differently. v2-preview's array→wire conversion is `Result`-based and fails cleanly, naming the exact path (`ext/src/value.rs`). v1.4.0's `from_zval` (`src/lib.rs`) recurses into list/map elements via `arr.iter().map(|(_, v)| from_zval(v).unwrap())` (and `.expect(...)` for string-keyed maps) — when an element is an unsupported object, the recursive call already throws a PHP exception ("Invalid Object") *and* returns `None`, so the outer `.unwrap()`/`.expect()` panics on that `None` right after. That panic happens inside `Bin::__construct`, which `ext-php-rs` exposes straight to Zend; the crate's own panic-catching helper (`zend::try_catch`) is opt-in and isn't wired into that call path, so an uncaught panic there should abort the whole PHP process rather than raise a catchable exception. Source-confirmed against the current `main` branch; not run live — see below.
+- A *bare* top-level unsupported value (not nested) takes a different path: `Bin::__construct` calls `from_zval` once and matches its `None` result directly, so it returns a clean `` Err("Invalid input for argument `value`") `` instead of panicking. The panic only happens when the unsupported value is an element *inside* a list/map.
 - Documented, not a secret: `PHP_BLOB`'s own comment says it exists "to support the old PHP7 client," and v2-preview's README covers 1.x migration directly.
 
 ## Layout
